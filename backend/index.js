@@ -1,10 +1,10 @@
+import {} from 'dotenv/config'
+// ^^^ import dotenv from 'dotenv'; dotenv.config() doesn't work to full extent f5r. https://github.com/motdotla/dotenv/issues/89
 import express from 'express'
 import cors from 'cors'
-const app = express()
+import Note from './models/note.js'
 
-app.use(express.json())
-app.use(cors())
-app.use(express.static('build'))
+const app = express()
 
 //middleware request logger
 const reqLogger = (req, res, next) => {
@@ -14,49 +14,38 @@ const reqLogger = (req, res, next) => {
     console.log('-----------------------')
     next()
 }
-app.use(reqLogger)
 
-let notes = [
-    {
-      id: 1,
-      content: "HTML is easy",
-      date: "2019-05-30T17:30:31.098Z",
-      important: true
-    },
-    {
-      id: 2,
-      content: "Browser can execute only Javascript",
-      date: "2019-05-30T18:39:34.091Z",
-      important: false
-    },
-    {
-      id: 3,
-      content: "GET and POST are the most important methods of HTTP protocol",
-      date: "2019-05-30T19:20:14.298Z",
-      important: true
-    }
-  ]
+app.use(express.static('build'))
+app.use(express.json())
+app.use(cors())
+app.use(reqLogger)
 
 app.get('/', (req, res) => {
     res.send('<h1>HELLO WORLD!</h1>')
 })
 
 app.get('/api/notes', (req, res) => {
-    res.json(notes)
+    Note.find({}).then(notes => res.json(notes))
 })
 
-app.get('/api/notes/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const note = notes.find(n => n.id === id)
-    
-    note ? res.json(note) : res.status(404).end()
+app.get('/api/notes/:id', (req, res, next) => {
+    Note.findById(req.params.id)
+        .then(note => {
+            note ? res.json(note) : res.status(404).end()
+        })
+        .catch(err => {
+            next(err)
+        })
 })
 
 app.delete('/api/notes/:id', (req, res) => {
-    const id = Number(req.params.id)
-    notes = notes.filter(n => n.id !== id)
-
-    res.status(204).end()
+    Note.findByIdAndRemove(req.params.id)
+        .then(result => {
+            res.status(204).end()
+        })
+        .catch(err => {
+            next(err)
+        })
 })
 
 app.post('/api/notes', (req, res) => {
@@ -66,30 +55,49 @@ app.post('/api/notes', (req, res) => {
         return res.status(400).json({ error: 'content missing' })
     }
 
-    const note = {
+    const note = new Note({
         content: body.content,
         important: body.important || false,
-        date: new Date(),
-        id: genId()
-    }
+        date: new Date()
+    })
 
-    notes = [...notes, note]
-
-    res.json(note)
+    note.save().then(savedNote => {
+        res.json(savedNote)
+    })
 })
 
-//spread op to allow mathmax on an array
-const genId = () => {
-    const maxId = notes.length > 0 ? Math.max(...notes.map(n => n.id)) : 0
-    return maxId + 1
-}
+app.put('/api/notes/:id', (req, res, next) => {
+    const body = req.body
 
+    const note = {
+        content: body.content,
+        important: body.important
+    }
+
+    Note.findByIdAndUpdate(req.params.id, note, { new: true })
+        .then(updatedNote => {
+            res.json(updatedNote)
+        })
+        .catch(err => {
+            next(err)
+        })
+})
+
+//unknown endpoint middleware
 const unknownEndpoint = (req, res) => {
     res.status(404).send({ error: 'unknown endpoint' })
 }
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT || 3001
+//err handler middleware(this is where all the errs passed to next go) has 2b loaded last
+const errorHandler = (err, req, res, next) => {
+    console.log(err.message)
+    err.name === 'CastError' ? res.status(400).send({ error: 'wrong/malformed id' }) : next(err)
+}
+
+app.use(errorHandler)
+
+const PORT = process.env.PORT
 app.listen(PORT)
 
 console.log(`server running on ${PORT}`);
