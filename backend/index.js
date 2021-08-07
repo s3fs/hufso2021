@@ -1,6 +1,6 @@
 import {} from 'dotenv/config'
 // ^^^ import dotenv from 'dotenv'; dotenv.config() doesn't work to full extent f5r. https://github.com/motdotla/dotenv/issues/89
-import express from 'express'
+import express, { response } from 'express'
 import cors from 'cors'
 import Note from './models/note.js'
 
@@ -8,6 +8,7 @@ const app = express()
 
 //middleware request logger
 const reqLogger = (req, res, next) => {
+    console.log('-----------------------')
     console.log('req.method :>> ', req.method)
     console.log('req.path :>> ', req.path)
     console.log('req.body :>> ', req.body)
@@ -48,7 +49,7 @@ app.delete('/api/notes/:id', (req, res) => {
         })
 })
 
-app.post('/api/notes', (req, res) => {
+app.post('/api/notes', (req, res, next) => {
     const body = req.body
 
     if (!body.content) {
@@ -61,9 +62,10 @@ app.post('/api/notes', (req, res) => {
         date: new Date()
     })
 
-    note.save().then(savedNote => {
-        res.json(savedNote)
-    })
+    note.save()
+        .then(savedNote => savedNote.toJSON())
+        .then(savedAndFormattedNote => res.json(savedAndFormattedNote))
+        .catch(err => next(err))
 })
 
 app.put('/api/notes/:id', (req, res, next) => {
@@ -91,10 +93,15 @@ app.use(unknownEndpoint)
 
 //err handler middleware(this is where all the errs passed to next go) has 2b loaded last
 const errorHandler = (err, req, res, next) => {
-    console.log(err.message)
-    err.name === 'CastError' ? res.status(400).send({ error: 'wrong/malformed id' }) : next(err)
-}
+    console.error(err.message)
+    if (err.name === 'CastError') {
+        return res.status(400).send({ error: 'wrong/malformed id' })
+    } else if (err.name === 'ValidationError') {
+        return res.status(400).json({ error: err.message })
+    }
 
+    next(error)
+}
 app.use(errorHandler)
 
 const PORT = process.env.PORT
