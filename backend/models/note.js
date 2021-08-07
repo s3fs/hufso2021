@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-const { connect, Schema, model, connection } = mongoose
+const { connect, Schema, model } = mongoose
 
 const url = process.env.MONGODB_URI
 console.log(`connecting to ${url}`)
@@ -29,4 +29,6 @@ noteSchema.set('toJSON', {
     }
 })
 
-export default model('Note', noteSchema)
+const Note = model('Note', noteSchema)
+
+export default Note
