@@ -14,7 +14,7 @@ const unknownEndpoint = (req, res) => {
 }
 
 const errorHandler = (err, req, res, next) => {
-    console.error(err.message)
+    error(err.message)
     if (err.name === 'CastError') {
         return res.status(400).send({ error: 'wrong/malformed id' })
     } else if (err.name === 'ValidationError') {
