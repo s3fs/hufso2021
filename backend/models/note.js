@@ -1,12 +1,5 @@
 import mongoose from 'mongoose'
-const { connect, Schema, model } = mongoose
-
-const url = process.env.MONGODB_URI
-console.log(`connecting to ${url}`)
-
-connect(url, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false, useCreateIndex: true })
-    .then(() => console.log('connected to MDB'))
-    .catch(err => console.log(`NO_CON ${err}`))
+const { Schema, model } = mongoose
 
 const noteSchema = new Schema({
     content: {

@@ -1,7 +1,7 @@
 import app from './app.js'
 import { createServer } from 'http'
-import { MONGODB_URI, PORT } from './utils/config.js'
-import { info, error } from './utils/logger.js'
+import { PORT } from './utils/config.js'
+import { info } from './utils/logger.js'
 
 const server = createServer(app)
 
