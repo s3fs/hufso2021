@@ -2,31 +2,29 @@ import { Router } from 'express'
 const router = Router()
 import Note from '../models/note.js'
 
-router.get('/', (req, res) => {
-    Note.find({}).then(notes => res.json(notes))
+router.get('/', async (req, res) => {
+    res.json(await Note.find({}))
 })
 
-router.get('/:id', (req, res, next) => {
-    Note.findById(req.params.id)
-        .then(note => {
-            note ? res.json(note) : res.status(404).end()
-        })
-        .catch(err => {
-            next(err)
-        })
+router.get('/:id', async (req, res, next) => {
+    try {
+        const note = await Note.findById(req.params.id)
+        note ? res.json(note) : res.status(404).end()
+    } catch (err) {
+        next(err)
+    }
 })
 
-router.delete('/:id', (req, res) => {
-    Note.findByIdAndRemove(req.params.id)
-        .then(result => {
-            res.status(204).end()
-        })
-        .catch(err => {
-            next(err)
-        })
+router.delete('/:id', async (req, res) => {
+    try {
+        await Note.findByIdAndRemove(req.params.id)
+        res.status(204).end()
+    } catch (err) {
+        next(err)
+    }
 })
 
-router.post('/', (req, res, next) => {
+router.post('/', async (req, res, next) => {
     const body = req.body
 
     const note = new Note({
@@ -35,12 +33,14 @@ router.post('/', (req, res, next) => {
         date: new Date()
     })
 
-    note.save()
-        .then(savedNote => res.json(savedNote))
-        .catch(err => next(err))
+    try {
+        res.json(await note.save())
+    } catch (err) {
+        next(err)
+    }
 })
 
-router.put('/:id', (req, res, next) => {
+router.put('/:id', async (req, res, next) => {
     const body = req.body
 
     const note = {
