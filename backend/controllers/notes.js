@@ -6,25 +6,17 @@ router.get('/', async (req, res) => {
     res.json(await Note.find({}))
 })
 
-router.get('/:id', async (req, res, next) => {
-    try {
-        const note = await Note.findById(req.params.id)
-        note ? res.json(note) : res.status(404).end()
-    } catch (err) {
-        next(err)
-    }
+router.get('/:id', async (req, res) => {
+    const note = await Note.findById(req.params.id)
+    note ? res.json(note) : res.status(404).end()
 })
 
 router.delete('/:id', async (req, res) => {
-    try {
-        await Note.findByIdAndRemove(req.params.id)
-        res.status(204).end()
-    } catch (err) {
-        next(err)
-    }
+    await Note.findByIdAndRemove(req.params.id)
+    res.status(204).end()
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', async (req, res) => {
     const body = req.body
 
     const note = new Note({
@@ -33,14 +25,10 @@ router.post('/', async (req, res, next) => {
         date: new Date()
     })
 
-    try {
-        res.json(await note.save())
-    } catch (err) {
-        next(err)
-    }
+    res.json(await note.save())
 })
 
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req, res) => {
     const body = req.body
 
     const note = {
@@ -48,13 +36,8 @@ router.put('/:id', async (req, res, next) => {
         important: body.important
     }
 
-    Note.findByIdAndUpdate(req.params.id, note, { new: true })
-        .then(updatedNote => {
-            res.json(updatedNote)
-        })
-        .catch(err => {
-            next(err)
-        })
+    const updNote = await Note.findByIdAndUpdate(req.params.id, note, { new: true })
+    res.json(updNote)
 })
 
 export default router

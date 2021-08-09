@@ -1,6 +1,7 @@
 import { MONGODB_URI } from './utils/config.js'
 import express from 'express' /* figure out this imnport */
 const app = express()
+import 'express-async-errors'
 import cors from 'cors'
 import router from './controllers/notes.js'
 import { requestLogger, unknownEndpoint, errorHandler } from './utils/middleware.js'
