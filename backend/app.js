@@ -8,6 +8,7 @@ import { requestLogger, unknownEndpoint, errorHandler } from './utils/middleware
 import { info, error } from './utils/logger.js'
 import mongoose from 'mongoose'
 const { connect } = mongoose
+import userRouter from './controllers/users.js'
 
 info('connecting to', MONGODB_URI)
 
@@ -25,6 +26,7 @@ app.use(express.json()) //this too
 app.use(requestLogger)
 
 app.use('/api/notes', router)
+app.use('/api/users', userRouter)
 
 app.use(unknownEndpoint)
 app.use(errorHandler)
