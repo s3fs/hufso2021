@@ -1,4 +1,4 @@
 .env
 node_modules
-../bloglist
-../part2-notes
+../bloglist/
+../part2-notes/

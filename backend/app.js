@@ -4,11 +4,12 @@ const app = express()
 import 'express-async-errors'
 import cors from 'cors'
 import router from './controllers/notes.js'
+import userRouter from './controllers/users.js'
+import loginRouter from './controllers/login.js'
 import { requestLogger, unknownEndpoint, errorHandler } from './utils/middleware.js'
 import { info, error } from './utils/logger.js'
 import mongoose from 'mongoose'
 const { connect } = mongoose
-import userRouter from './controllers/users.js'
 
 info('connecting to', MONGODB_URI)
 
@@ -27,6 +28,7 @@ app.use(requestLogger)
 
 app.use('/api/notes', router)
 app.use('/api/users', userRouter)
+app.use('/api/login', loginRouter)
 
 app.use(unknownEndpoint)
 app.use(errorHandler)

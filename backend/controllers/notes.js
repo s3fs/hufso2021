@@ -1,7 +1,18 @@
 import { Router } from 'express'
 const router = Router()
+import jwt from 'jsonwebtoken'
 import Note from '../models/note.js'
 import User from '../models/user.js'
+
+const getTokenFrom = (req) => {
+    const auth = req.get('authorization')
+
+    if (auth && auth.toLowerCase().startsWith('bearer')) {
+        return auth.substring(7)
+    } else {
+        return null
+    }
+}
 
 router.get('/', async (req, res) => {
     const notes = await Note.find({}).populate('user', { username: 1, name: 1 })
@@ -20,8 +31,14 @@ router.delete('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
     const body = req.body
+    const token = getTokenFrom(req)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
 
-    const user = await User.findById(body.userId)
+    if(!token || !decodedToken.id) {
+        return res.status(401).json({ error: 'Token missing or invalid' })
+    }
+
+    const user = await User.findById(decodedToken.id)
 
     const note = new Note({
         content: body.content,
