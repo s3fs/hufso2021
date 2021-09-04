@@ -19,12 +19,14 @@ const userSchema = new Schema({
 
 userSchema.plugin(uniqueValidator)
 
+//This here below is a mechanism that runs when data is fetched in 
+//json format. Actual data in mongodb contains __v, id and pwdhash
+//more on tojson() https://thecodebarbarian.com/what-is-the-tojson-function-in-javascript.html
 userSchema.set('toJSON', {
     transform: (doc, retObj) => {
         retObj.id = retObj._id.toString()
         delete retObj._id
         delete retObj.__v
-        //pwdhash not 2b revealed ???? y doe
         delete retObj.pwdHash
     }
 })
